@@ -10,7 +10,6 @@ import {
   getAllStatuses,
   requestPairingCode,
   getQrDataUrl,
-  reconnectSession,
   disconnectSession,
   destroySession,
 } from './whatsapp.js';
@@ -160,18 +159,6 @@ app.get('/api/users/:id/qr', requireAuth, requireUser, async (req, res) => {
     res.json({ qr });
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate QR' });
-  }
-});
-
-app.post('/api/users/:id/reconnect', requireAuth, requireUser, async (req, res) => {
-  try {
-    if (req.targetUser.banned) {
-      return res.status(403).json({ error: 'User is banned' });
-    }
-    await reconnectSession(req.params.id);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Reconnect failed' });
   }
 });
 

@@ -267,18 +267,6 @@ export async function getQrDataUrl(userId) {
   return QRCode.toDataURL(session.latestQr);
 }
 
-export async function reconnectSession(userId) {
-  const session = sessions.get(userId);
-  if (session?.sock) {
-    try { session.sock.end(undefined); } catch (e) {}
-  }
-  if (session) {
-    session.connected = false;
-    session.connecting = false;
-  }
-  await startSession(userId);
-}
-
 export async function disconnectSession(userId) {
   const session = sessions.get(userId);
   if (session?.sock) {

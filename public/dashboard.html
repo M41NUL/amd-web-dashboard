@@ -932,9 +932,9 @@
 
           <div class="user-actions">
             ${!u.banned && !u.connected ? `<button class="mini-btn accent" data-action="toggle-pair">Connect</button>` : ''}
-            ${!u.banned && u.connected ? `<button class="mini-btn" data-action="reconnect">Reconnect</button>` : ''}
             ${u.connected ? `<button class="mini-btn danger" data-action="disconnect">Disconnect</button>` : ''}
-            ${!u.banned ? `<button class="mini-btn warn" data-action="ban">Ban</button>` : `<button class="mini-btn accent" data-action="unban">Unban</button>`}
+            ${!u.banned && u.connected ? `<button class="mini-btn warn" data-action="ban">Ban</button>` : ''}
+            ${u.banned ? `<button class="mini-btn accent" data-action="unban">Unban</button>` : ''}
             <button class="mini-btn danger" data-action="remove">Remove</button>
           </div>
 
@@ -1089,19 +1089,6 @@
           toast("Request failed");
         } finally {
           setBtnLoading(btn, false);
-        }
-        return;
-      }
-
-      if (action === "reconnect") {
-        const btn = e.target;
-        setBtnLoading(btn, true, "Reconnecting...");
-        try {
-          await fetch(`/api/users/${id}/reconnect`, { method: "POST", credentials: "include" });
-          toast("Reconnecting...");
-          setTimeout(refreshUsers, 1500);
-        } finally {
-          setTimeout(() => setBtnLoading(btn, false), 1500);
         }
         return;
       }
