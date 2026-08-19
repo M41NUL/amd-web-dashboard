@@ -51,7 +51,7 @@ export function addUser({ name, phone }) {
   if (existing) {
     throw new Error('A user with this phone number already exists');
   }
-  const id = cleanPhone; // phone number doubles as the stable session id
+  const id = cleanPhone;
   const user = {
     id,
     name,

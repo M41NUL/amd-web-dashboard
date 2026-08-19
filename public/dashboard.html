@@ -904,10 +904,10 @@
         setBtnLoading(btn, false);
       }
     });
-    const openPairAreas = new Set(); // track which user cards have the pairing UI open
-    const selectedMethod = {}; // per-user selected pairing method
-    const activeCode = {}; // per-user last generated pairing code
-    const activeQr = {}; // per-user last generated QR data url
+    const openPairAreas = new Set();
+    const selectedMethod = {};
+    const activeCode = {};
+    const activeQr = {};
 
     function userCardHtml(u) {
       const statusDot = u.banned ? "offline" : (u.connected ? "online" : "offline");
