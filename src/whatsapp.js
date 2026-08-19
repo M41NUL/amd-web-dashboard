@@ -244,6 +244,13 @@ export async function startFreshSession(userId) {
     session.connecting = false;
     session.latestQr = null;
   }
+
+  const dir = sessionDir(userId);
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+  } catch (e) {}
+  fs.mkdirSync(dir, { recursive: true });
+
   await startSession(userId);
 }
 

@@ -45,6 +45,8 @@
     margin-bottom: 28px;
     opacity: 0;
     animation: fadein 0.5s ease forwards;
+    position: relative;
+    z-index: 100;
   }
 
   .logo {
@@ -183,6 +185,8 @@
     opacity: 0;
     transform: translateY(10px);
     animation: rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    z-index: 1;
   }
 
   .panel:nth-of-type(1) { animation-delay: 0.05s; }

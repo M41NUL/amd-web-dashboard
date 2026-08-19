@@ -131,7 +131,7 @@ app.post('/api/users/:id/pair', requireAuth, requireUser, async (req, res) => {
     if (req.targetUser.banned) {
       return res.status(403).json({ error: 'User is banned' });
     }
-    await startSession(req.params.id);
+    await startFreshSession(req.params.id);
     await new Promise((r) => setTimeout(r, 800));
     const code = await requestPairingCode(req.params.id, req.targetUser.phone);
     res.json({ code });
