@@ -5,9 +5,7 @@ import path from 'path';
 import QRCode from 'qrcode';
 import { addLog } from './logger.js';
 import { updateUserState } from './userStore.js';
-
-const API_BASE = 'https://all-media-downloader-api.onrender.com';
-const API_KEY = 'm41nul';
+import { detectPlatform, fetchMediaInfo, fetchProxyVideo, fetchDirectVideo } from './mediaApi.js';
 
 const SESSIONS_ROOT = path.join(process.cwd(), 'sessions');
 if (!fs.existsSync(SESSIONS_ROOT)) {
@@ -36,42 +34,9 @@ function getOrCreateSession(userId) {
   return sessions.get(userId);
 }
 
-function detectPlatform(url) {
-  if (/tiktok\.com/i.test(url)) return 'tiktok';
-  if (/instagram\.com/i.test(url)) return 'instagram';
-  if (/facebook\.com|fb\.watch/i.test(url)) return 'facebook';
-  return null;
-}
-
 function extractUrl(text) {
   const match = text.match(/https?:\/\/[^\s]+/i);
   return match ? match[0] : null;
-}
-
-async function fetchMediaInfo(url) {
-  const platform = detectPlatform(url);
-  const endpoint = platform ? `/api/${platform}` : '/api/download';
-  const res = await fetch(`${API_BASE}${endpoint}?url=${encodeURIComponent(url)}`, {
-    headers: { 'x-api-key': API_KEY },
-  });
-  if (!res.ok) throw new Error(`API status ${res.status}`);
-  const data = await res.json();
-  if (!data.success) throw new Error(data.message || 'API request failed');
-  return data;
-}
-
-async function fetchProxyVideo(proxyToken) {
-  const res = await fetch(`${API_BASE}/api/proxy-video?proxy_token=${proxyToken}`, {
-    headers: { 'x-api-key': API_KEY },
-  });
-  if (!res.ok) throw new Error(`Proxy video fetch status ${res.status}`);
-  return Buffer.from(await res.arrayBuffer());
-}
-
-async function fetchDirectVideo(videoUrl) {
-  const res = await fetch(videoUrl);
-  if (!res.ok) throw new Error(`Direct video fetch status ${res.status}`);
-  return Buffer.from(await res.arrayBuffer());
 }
 
 async function handleMessage(userId, m) {
@@ -86,6 +51,7 @@ async function handleMessage(userId, m) {
   const url = extractUrl(text);
 
   if (!url) {
+    await session.sock.sendPresenceUpdate('composing', jid);
     if (!session.seenUsers.has(jid)) {
       session.seenUsers.add(jid);
       await session.sock.sendMessage(
@@ -96,22 +62,30 @@ async function handleMessage(userId, m) {
     } else {
       await session.sock.sendMessage(jid, { text: 'Please send a video link only.' }, { quoted: msg });
     }
+    await session.sock.sendPresenceUpdate('paused', jid).catch(() => {});
     return;
   }
 
   session.seenUsers.add(jid);
   const platform = detectPlatform(url);
   if (!platform) {
+    await session.sock.sendPresenceUpdate('composing', jid);
     await session.sock.sendMessage(
       jid,
       { text: 'This link is not supported. Send a TikTok, Instagram, or Facebook video link.' },
       { quoted: msg }
     );
+    await session.sock.sendPresenceUpdate('paused', jid).catch(() => {});
     return;
   }
 
+  let typingInterval = null;
   try {
     await session.sock.sendPresenceUpdate('composing', jid);
+    typingInterval = setInterval(() => {
+      session.sock.sendPresenceUpdate('composing', jid).catch(() => {});
+    }, 8000);
+
     await session.sock.sendMessage(jid, { text: 'Downloading, please wait.' }, { quoted: msg });
 
     const data = await fetchMediaInfo(url);
@@ -130,12 +104,14 @@ async function handleMessage(userId, m) {
       `Duration: ${data.duration || 'N/A'}`,
     ].join('\n').trim();
 
+    clearInterval(typingInterval);
     await session.sock.sendPresenceUpdate('paused', jid);
     await session.sock.sendMessage(jid, { video: videoBuffer, caption: captionText, mimetype: 'video/mp4' }, { quoted: msg });
 
     session.downloadCount++;
     addLog({ platform, status: 'Success', user: jid, ownerUserId: userId });
   } catch (err) {
+    clearInterval(typingInterval);
     await session.sock.sendPresenceUpdate('paused', jid).catch(() => {});
     addLog({ platform, status: 'Failed', user: jid, ownerUserId: userId });
     await session.sock.sendMessage(jid, { text: `Download failed. Reason: ${err.message || 'Unknown error'}` }, { quoted: msg });
