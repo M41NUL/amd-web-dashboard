@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import QRCode from 'qrcode';
 import { addLog } from './logger.js';
-import { getUser, findByPhone, updateUserState } from './userStore.js';
+import { updateUserState } from './userStore.js';
 
 const API_BASE = 'https://all-media-downloader-api.onrender.com';
 const API_KEY = 'm41nul';
@@ -78,15 +78,6 @@ async function handleMessage(userId, m) {
   const session = getOrCreateSession(userId);
   const msg = m.messages[0];
   if (!msg.message || msg.key.fromMe) return;
-
-  const userRecord = getUser(userId);
-  if (userRecord?.banned) {
-    const jid = msg.key.remoteJid;
-    try {
-      await session.sock.sendMessage(jid, { text: 'You have been banned from using this bot.' }, { quoted: msg });
-    } catch (e) {}
-    return;
-  }
 
   const jid = msg.key.remoteJid;
   const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
@@ -176,11 +167,6 @@ export function getAllStatuses() {
 }
 
 export async function startSession(userId) {
-  const userRecord = getUser(userId);
-  if (userRecord?.banned) {
-    throw new Error('This user is banned');
-  }
-
   const session = getOrCreateSession(userId);
   if (session.connecting) return;
   session.connecting = true;
@@ -220,8 +206,7 @@ export async function startSession(userId) {
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
       session.connecting = false;
 
-      const stillBanned = getUser(userId)?.banned;
-      if (shouldReconnect && !stillBanned) {
+      if (shouldReconnect) {
         setTimeout(() => startSession(userId).catch(() => {}), 1500);
       }
     }

@@ -364,7 +364,6 @@
     flex-shrink: 0;
   }
 
-  .badge.banned { background: var(--danger-bg); color: var(--danger); }
 
   .user-actions {
     display: flex;
@@ -910,8 +909,8 @@
     const activeQr = {};
 
     function userCardHtml(u) {
-      const statusDot = u.banned ? "offline" : (u.connected ? "online" : "offline");
-      const statusText = u.banned ? "Banned" : (u.connected ? "Connected" : "Disconnected");
+      const statusDot = u.connected ? "online" : "offline";
+      const statusText = u.connected ? "Connected" : "Disconnected";
       const method = selectedMethod[u.id] || "pairing";
       const isOpen = openPairAreas.has(u.id);
       const code = activeCode[u.id];
@@ -927,14 +926,11 @@
                 <div class="user-phone">${escapeHtml(u.phone)} &middot; ${statusText}</div>
               </div>
             </div>
-            ${u.banned ? '<span class="badge banned">Banned</span>' : ''}
           </div>
 
           <div class="user-actions">
-            ${!u.banned && !u.connected ? `<button class="mini-btn accent" data-action="toggle-pair">Connect</button>` : ''}
+            ${!u.connected ? `<button class="mini-btn accent" data-action="toggle-pair">Connect</button>` : ''}
             ${u.connected ? `<button class="mini-btn danger" data-action="disconnect">Disconnect</button>` : ''}
-            ${!u.banned && u.connected ? `<button class="mini-btn warn" data-action="ban">Ban</button>` : ''}
-            ${u.banned ? `<button class="mini-btn accent" data-action="unban">Unban</button>` : ''}
             <button class="mini-btn danger" data-action="remove">Remove</button>
           </div>
 
@@ -1102,39 +1098,6 @@
           setTimeout(refreshUsers, 800);
         } finally {
           setTimeout(() => setBtnLoading(btn, false), 800);
-        }
-        return;
-      }
-
-      if (action === "ban") {
-        const ok = await confirmModal({
-          title: "Ban this user?",
-          message: "They will be disconnected and blocked from using the bot.",
-          okLabel: "Ban",
-          danger: false,
-        });
-        if (!ok) return;
-        const btn = e.target;
-        setBtnLoading(btn, true, "Banning...");
-        try {
-          await fetch(`/api/users/${id}/ban`, { method: "POST", credentials: "include" });
-          toast("User banned");
-          refreshUsers();
-        } finally {
-          setBtnLoading(btn, false);
-        }
-        return;
-      }
-
-      if (action === "unban") {
-        const btn = e.target;
-        setBtnLoading(btn, true, "Unbanning...");
-        try {
-          await fetch(`/api/users/${id}/unban`, { method: "POST", credentials: "include" });
-          toast("User unbanned");
-          refreshUsers();
-        } finally {
-          setBtnLoading(btn, false);
         }
         return;
       }

@@ -56,7 +56,6 @@ export function addUser({ name, phone }) {
     id,
     name,
     phone: cleanPhone,
-    banned: false,
     createdAt: Date.now(),
     connected: false,
     account: null,
@@ -71,14 +70,6 @@ export function removeUser(id) {
   if (!users[id]) throw new Error('User not found');
   delete users[id];
   save(users);
-}
-
-export function setBanned(id, banned) {
-  const users = load();
-  if (!users[id]) throw new Error('User not found');
-  users[id].banned = banned;
-  save(users);
-  return users[id];
 }
 
 export function updateUserState(id, patch) {

@@ -14,7 +14,7 @@ import {
   destroySession,
 } from './whatsapp.js';
 import { getLogs, getLogsForUser, clearLogs, getServerUptimeSeconds } from './logger.js';
-import { listUsers, getUser, addUser, removeUser, setBanned, searchUsers } from './userStore.js';
+import { listUsers, getUser, addUser, removeUser, searchUsers } from './userStore.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -67,7 +67,6 @@ app.get('/api/users', requireAuth, (req, res) => {
   const withStatus = users.map((u) => ({
     ...u,
     ...getSessionStatus(u.id),
-    banned: u.banned,
   }));
   res.json({ users: withStatus });
 });
@@ -93,27 +92,6 @@ app.delete('/api/users/:id', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/users/:id/ban', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = setBanned(id, true);
-    await disconnectSession(id);
-    res.json({ ok: true, user });
-  } catch (err) {
-    res.status(400).json({ error: err.message || 'Failed to ban user' });
-  }
-});
-
-app.post('/api/users/:id/unban', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = setBanned(id, false);
-    res.json({ ok: true, user });
-  } catch (err) {
-    res.status(400).json({ error: err.message || 'Failed to unban user' });
-  }
-});
-
 function requireUser(req, res, next) {
   const user = getUser(req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -127,9 +105,6 @@ app.get('/api/users/:id/status', requireAuth, requireUser, (req, res) => {
 
 app.post('/api/users/:id/pair', requireAuth, requireUser, async (req, res) => {
   try {
-    if (req.targetUser.banned) {
-      return res.status(403).json({ error: 'User is banned' });
-    }
     await startFreshSession(req.params.id);
     await new Promise((r) => setTimeout(r, 800));
     const code = await requestPairingCode(req.params.id, req.targetUser.phone);
@@ -141,9 +116,6 @@ app.post('/api/users/:id/pair', requireAuth, requireUser, async (req, res) => {
 
 app.get('/api/users/:id/qr', requireAuth, requireUser, async (req, res) => {
   try {
-    if (req.targetUser.banned) {
-      return res.status(403).json({ error: 'User is banned' });
-    }
     await startFreshSession(req.params.id);
 
     let qr = null;
@@ -188,10 +160,8 @@ app.listen(PORT, async () => {
   console.log(`AMD web dashboard running on port ${PORT}`);
   const users = listUsers();
   for (const user of users) {
-    if (!user.banned) {
-      startSession(user.id).catch((err) =>
-        console.error(`Failed to resume session for ${user.name}:`, err.message)
-      );
-    }
+    startSession(user.id).catch((err) =>
+      console.error(`Failed to resume session for ${user.name}:`, err.message)
+    );
   }
 });
