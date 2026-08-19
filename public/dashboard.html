@@ -101,12 +101,10 @@
     top: 50px;
     right: 0;
     width: 240px;
-    background: rgba(255, 255, 255, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: #ffffff;
+    border: 1px solid var(--border);
     border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(15, 23, 32, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: 0 12px 32px rgba(15, 23, 32, 0.18), 0 2px 8px rgba(15, 23, 32, 0.08);
     padding: 16px;
     z-index: 60;
     opacity: 0;
@@ -515,6 +513,112 @@
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+
+  .btn-spinner {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+    vertical-align: -2px;
+  }
+
+  .mini-btn .btn-spinner,
+  .opt-btn .btn-spinner,
+  .copy-btn .btn-spinner {
+    border: 2px solid rgba(15, 23, 32, 0.15);
+    border-top-color: var(--text-dim);
+  }
+
+  .mini-btn.danger .btn-spinner { border-top-color: var(--danger); }
+  .mini-btn.warn .btn-spinner { border-top-color: var(--warn); }
+  .mini-btn.accent .btn-spinner { border-top-color: var(--accent); }
+  .confirm-ok .btn-spinner { border-top-color: #fff; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  button.is-loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: wait;
+    opacity: 0.85;
+  }
+
+  button.is-loading:disabled { cursor: wait; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 32, 0.45);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: overlayFade 0.18s ease forwards;
+    padding: 20px;
+  }
+
+  @keyframes overlayFade { to { opacity: 1; } }
+
+  .confirm-box {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 22px;
+    width: min(320px, 100%);
+    box-shadow: 0 20px 60px rgba(15, 23, 32, 0.25);
+    transform: translateY(8px) scale(0.98);
+    animation: confirmRise 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  @keyframes confirmRise { to { transform: translateY(0) scale(1); } }
+
+  .confirm-box .confirm-title {
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .confirm-box .confirm-msg {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .confirm-box .confirm-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .confirm-box .confirm-actions button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--panel-strong);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .confirm-box .confirm-actions .confirm-ok {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+  }
+
+  .confirm-box .confirm-actions .confirm-ok.warn-btn {
+    background: var(--warn);
+    border-color: var(--warn);
+  }
 </style>
 </head>
 <body>
@@ -640,22 +744,53 @@
 
     document.getElementById("accountsBtn").addEventListener("click", () => {
       dropdown.classList.remove("open");
-      document.getElementById("dd-account-info")?.remove();
-      const box = document.createElement("div");
-      box.id = "dd-account-info";
-      box.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.55);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,0.4);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(15,23,32,0.18), inset 0 1px 0 rgba(255,255,255,0.6);z-index:100;width:min(320px,88vw);text-align:center;";
+      document.getElementById("dd-account-overlay")?.remove();
+      const overlay = document.createElement("div");
+      overlay.id = "dd-account-overlay";
+      overlay.className = "modal-overlay";
       const name = document.getElementById("ddName").textContent;
       const email = document.getElementById("ddEmail").textContent;
-      box.innerHTML = `
-        <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${name}</div>
-        <div style="font-size:13px;color:#6b7280;margin-bottom:18px;">${email}</div>
-        <button id="closeAccountInfo" style="padding:10px 20px;border-radius:10px;background:#0f9e8f;border:none;color:#fff;font-size:13px;cursor:pointer;">Close</button>
+      overlay.innerHTML = `
+        <div class="confirm-box" style="text-align:center;">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${name}</div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:18px;">${email}</div>
+          <button id="closeAccountInfo" style="padding:10px 20px;border-radius:10px;background:#0f9e8f;border:none;color:#fff;font-size:13px;font-weight:600;cursor:pointer;width:100%;">Close</button>
+        </div>
       `;
-      document.body.appendChild(box);
-      document.getElementById("closeAccountInfo").addEventListener("click", () => box.remove());
+      document.body.appendChild(overlay);
+      const close = () => overlay.remove();
+      document.getElementById("closeAccountInfo").addEventListener("click", close);
+      overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
     });
 
-    document.getElementById("signOutBtn").addEventListener("click", async () => {
+    function confirmModal({ title, message, okLabel = "Confirm", danger = true }) {
+      return new Promise((resolve) => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.innerHTML = `
+          <div class="confirm-box">
+            <div class="confirm-title">${title}</div>
+            <div class="confirm-msg">${message}</div>
+            <div class="confirm-actions">
+              <button data-choice="cancel">Cancel</button>
+              <button data-choice="ok" class="confirm-ok ${danger ? '' : 'warn-btn'}">${okLabel}</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        const cleanup = (result) => { overlay.remove(); resolve(result); };
+        overlay.querySelector('[data-choice="cancel"]').addEventListener("click", () => cleanup(false));
+        overlay.querySelector('[data-choice="ok"]').addEventListener("click", (e) => {
+          setBtnLoading(e.currentTarget, true);
+          overlay.querySelector('[data-choice="cancel"]').disabled = true;
+          cleanup(true);
+        });
+        overlay.addEventListener("click", (e) => { if (e.target === overlay) cleanup(false); });
+      });
+    }
+
+    document.getElementById("signOutBtn").addEventListener("click", async (e) => {
+      setBtnLoading(e.currentTarget, true, "Signing out...");
       await fetch("/auth/logout", { method: "POST", credentials: "include" });
       await signOut(auth);
       window.location.href = "/index.html";
@@ -673,6 +808,21 @@
       sessionExpiredHandled = true;
       toast("Session expired. Redirecting to login...");
       setTimeout(() => { window.location.href = "/index.html"; }, 1200);
+    }
+
+    function setBtnLoading(btn, isLoading, loadingLabel) {
+      if (!btn) return;
+      if (isLoading) {
+        if (btn.dataset.origLabel === undefined) btn.dataset.origLabel = btn.textContent;
+        btn.disabled = true;
+        btn.classList.add("is-loading");
+        btn.innerHTML = `<span class="btn-spinner"></span>${loadingLabel ? `<span>${loadingLabel}</span>` : ""}`;
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("is-loading");
+        btn.textContent = btn.dataset.origLabel !== undefined ? btn.dataset.origLabel : btn.textContent;
+        delete btn.dataset.origLabel;
+      }
     }
 
     function addRipple(btn, e) {
@@ -710,10 +860,12 @@
     }
     document.getElementById("addUserBtn").addEventListener("click", async (e) => {
       addRipple(e.currentTarget, e);
+      const btn = e.currentTarget;
       const name = document.getElementById("newName").value.trim();
       const phone = document.getElementById("newPhone").value.replace(/[^0-9]/g, "");
       if (!name) { toast("Enter a name"); return; }
       if (phone.length < 8) { toast("Enter a valid number"); return; }
+      setBtnLoading(btn, true, "Adding...");
       try {
         const res = await fetch("/api/users", {
           method: "POST",
@@ -733,6 +885,8 @@
         }
       } catch (err) {
         toast("Request failed");
+      } finally {
+        setBtnLoading(btn, false);
       }
     });
     let searchTimer = null;
@@ -740,18 +894,28 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(refreshUsers, 250);
     });
-    document.getElementById("clearLogsBtn").addEventListener("click", async () => {
-      await fetch("/api/logs/clear", { method: "POST", credentials: "include" });
-      toast("Logs cleared");
+    document.getElementById("clearLogsBtn").addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      setBtnLoading(btn, true);
+      try {
+        await fetch("/api/logs/clear", { method: "POST", credentials: "include" });
+        toast("Logs cleared");
+      } finally {
+        setBtnLoading(btn, false);
+      }
     });
     const openPairAreas = new Set(); // track which user cards have the pairing UI open
     const selectedMethod = {}; // per-user selected pairing method
+    const activeCode = {}; // per-user last generated pairing code
+    const activeQr = {}; // per-user last generated QR data url
 
     function userCardHtml(u) {
       const statusDot = u.banned ? "offline" : (u.connected ? "online" : "offline");
       const statusText = u.banned ? "Banned" : (u.connected ? "Connected" : "Disconnected");
       const method = selectedMethod[u.id] || "pairing";
       const isOpen = openPairAreas.has(u.id);
+      const code = activeCode[u.id];
+      const qr = activeQr[u.id];
 
       return `
         <div class="user-card" data-id="${u.id}">
@@ -789,14 +953,14 @@
                 <button class="primary-btn" data-action="get-qr" style="width:100%;">Generate QR</button>
               </div>
             </div>
-            <div class="code-display hidden" data-code-display>
+            <div class="code-display ${code ? '' : 'hidden'}" data-code-display>
               <div class="code-row">
-                <span class="code" data-code-text>------</span>
+                <span class="code" data-code-text>${code || '------'}</span>
                 <button class="copy-btn" data-action="copy-code">Copy</button>
               </div>
               <div class="hint">Enter this code in WhatsApp<br />Linked Devices &gt; Link with phone number</div>
             </div>
-            <div class="qr-box hidden" data-qr-box></div>
+            <div class="qr-box ${qr ? '' : 'hidden'}" data-qr-box>${qr ? `<img src="${qr}" alt="QR Code" />` : ''}</div>
           </div>
         </div>
       `;
@@ -820,6 +984,13 @@
 
     function renderUsers(users) {
       const list = document.getElementById("userList");
+      users.forEach((u) => {
+        if (u.connected) {
+          delete activeCode[u.id];
+          delete activeQr[u.id];
+          openPairAreas.delete(u.id);
+        }
+      });
       if (!users.length) {
         list.innerHTML = '<div class="empty">No users found.</div>';
         return;
@@ -836,6 +1007,8 @@
 
       if (method) {
         selectedMethod[id] = method;
+        delete activeCode[id];
+        delete activeQr[id];
         card.querySelectorAll(".opt-btn").forEach((b) => b.classList.toggle("active", b.dataset.method === method));
         card.querySelector("[data-pair-form]").classList.toggle("hidden", method !== "pairing");
         card.querySelector("[data-qr-form]").classList.toggle("hidden", method !== "qr");
@@ -856,10 +1029,13 @@
       }
 
       if (action === "get-code") {
+        const btn = e.target;
+        setBtnLoading(btn, true, "Getting code...");
         try {
           const res = await fetch(`/api/users/${id}/pair`, { method: "POST", credentials: "include" });
           const data = await res.json();
           if (data.code) {
+            activeCode[id] = data.code;
             card.querySelector("[data-code-text]").textContent = data.code;
             card.querySelector("[data-code-display]").classList.remove("hidden");
           } else {
@@ -867,17 +1043,23 @@
           }
         } catch (err) {
           toast("Request failed");
+        } finally {
+          setBtnLoading(btn, false);
         }
         return;
       }
 
       if (action === "copy-code") {
+        const btn = e.target;
         const codeText = card.querySelector("[data-code-text]").textContent;
+        setBtnLoading(btn, true);
         try {
           await navigator.clipboard.writeText(codeText);
           toast("Code copied");
         } catch (err) {
           toast("Could not copy");
+        } finally {
+          setBtnLoading(btn, false);
         }
         return;
       }
@@ -885,66 +1067,108 @@
       if (action === "get-qr") {
         const box = card.querySelector("[data-qr-box]");
         const btn = e.target;
-        const originalLabel = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "Generating...";
+        setBtnLoading(btn, true, "Generating...");
         box.classList.remove("hidden");
-        box.innerHTML = '<div class="empty" style="padding:12px;">Generating QR code...</div>';
+        box.innerHTML = '<div class="empty" style="padding:12px;"><span class="btn-spinner" style="border-color:rgba(15,23,32,0.15);border-top-color:var(--text-dim);"></span> Generating QR code...</div>';
         try {
           const res = await fetch(`/api/users/${id}/qr`, { credentials: "include" });
           const data = await res.json();
           if (data.qr) {
+            activeQr[id] = data.qr;
             box.innerHTML = `<img src="${data.qr}" alt="QR Code" />`;
           } else {
+            delete activeQr[id];
             box.innerHTML = '';
             box.classList.add("hidden");
             toast(data.error || "Failed to generate QR, try again");
           }
         } catch (err) {
+          delete activeQr[id];
           box.innerHTML = '';
           box.classList.add("hidden");
           toast("Request failed");
         } finally {
-          btn.disabled = false;
-          btn.textContent = originalLabel;
+          setBtnLoading(btn, false);
         }
         return;
       }
 
       if (action === "reconnect") {
-        await fetch(`/api/users/${id}/reconnect`, { method: "POST", credentials: "include" });
-        toast("Reconnecting...");
-        setTimeout(refreshUsers, 1500);
+        const btn = e.target;
+        setBtnLoading(btn, true, "Reconnecting...");
+        try {
+          await fetch(`/api/users/${id}/reconnect`, { method: "POST", credentials: "include" });
+          toast("Reconnecting...");
+          setTimeout(refreshUsers, 1500);
+        } finally {
+          setTimeout(() => setBtnLoading(btn, false), 1500);
+        }
         return;
       }
 
       if (action === "disconnect") {
-        await fetch(`/api/users/${id}/disconnect`, { method: "POST", credentials: "include" });
-        toast("Disconnected");
-        setTimeout(refreshUsers, 800);
+        const btn = e.target;
+        setBtnLoading(btn, true, "Disconnecting...");
+        try {
+          await fetch(`/api/users/${id}/disconnect`, { method: "POST", credentials: "include" });
+          toast("Disconnected");
+          setTimeout(refreshUsers, 800);
+        } finally {
+          setTimeout(() => setBtnLoading(btn, false), 800);
+        }
         return;
       }
 
       if (action === "ban") {
-        if (!confirm("Ban this user? They will be disconnected and blocked from using the bot.")) return;
-        await fetch(`/api/users/${id}/ban`, { method: "POST", credentials: "include" });
-        toast("User banned");
-        refreshUsers();
+        const ok = await confirmModal({
+          title: "Ban this user?",
+          message: "They will be disconnected and blocked from using the bot.",
+          okLabel: "Ban",
+          danger: false,
+        });
+        if (!ok) return;
+        const btn = e.target;
+        setBtnLoading(btn, true, "Banning...");
+        try {
+          await fetch(`/api/users/${id}/ban`, { method: "POST", credentials: "include" });
+          toast("User banned");
+          refreshUsers();
+        } finally {
+          setBtnLoading(btn, false);
+        }
         return;
       }
 
       if (action === "unban") {
-        await fetch(`/api/users/${id}/unban`, { method: "POST", credentials: "include" });
-        toast("User unbanned");
-        refreshUsers();
+        const btn = e.target;
+        setBtnLoading(btn, true, "Unbanning...");
+        try {
+          await fetch(`/api/users/${id}/unban`, { method: "POST", credentials: "include" });
+          toast("User unbanned");
+          refreshUsers();
+        } finally {
+          setBtnLoading(btn, false);
+        }
         return;
       }
 
       if (action === "remove") {
-        if (!confirm("Remove this user entirely? This cannot be undone.")) return;
-        await fetch(`/api/users/${id}`, { method: "DELETE", credentials: "include" });
-        toast("User removed");
-        refreshUsers();
+        const ok = await confirmModal({
+          title: "Remove this user?",
+          message: "This will delete the user entirely and cannot be undone.",
+          okLabel: "Remove",
+          danger: true,
+        });
+        if (!ok) return;
+        const btn = e.target;
+        setBtnLoading(btn, true, "Removing...");
+        try {
+          await fetch(`/api/users/${id}`, { method: "DELETE", credentials: "include" });
+          toast("User removed");
+          refreshUsers();
+        } finally {
+          setBtnLoading(btn, false);
+        }
         return;
       }
     });
