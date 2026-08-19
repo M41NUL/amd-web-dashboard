@@ -1,0 +1,18 @@
+{
+  "name": "amd-web-dashboard",
+  "version": "1.0.0",
+  "description": "AMD - All Media Downloader WhatsApp Bot with Web Control Panel",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "pino": "^9.0.0",
+    "qrcode": "^1.5.4",
+    "express": "^4.19.2",
+    "cookie-parser": "^1.4.6",
+    "jose": "^5.6.3"
+  }
+}
