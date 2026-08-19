@@ -4,12 +4,14 @@ import crypto from 'crypto';
 const ALLOWED_EMAIL = 'devmainulislam@gmail.com';
 const FIREBASE_PROJECT_ID = 'amd-whatsapp-bot';
 
-const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-if (!process.env.SESSION_SECRET) {
-  console.warn(
-    '[auth] SESSION_SECRET env var not set. Using a random in-memory secret. ' +
-    'Set SESSION_SECRET on Render so sessions stay valid across restarts.'
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  console.error(
+    '[auth] FATAL: SESSION_SECRET environment variable is not set. ' +
+    'Generate one with `openssl rand -hex 32` and set it in Render > Environment. ' +
+    'Without it, every restart invalidates all sessions (Session expired / login loop).'
   );
+  process.exit(1);
 }
 
 const configuredOrigins = (process.env.ALLOWED_ORIGIN || '')

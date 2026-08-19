@@ -1,5 +1,10 @@
 ## AMD Web Dashboard (Multi-User)
 
+> **Before you deploy:** `SESSION_SECRET` must be set on Render or the app
+> will refuse to start. This is what you're hitting right now if you're
+> seeing "Session expired" right after logging in, "Uptime: NaNs", or
+> "Add User" silently failing — see the section below.
+
 WhatsApp media downloader bot with a browser-based control panel. One admin
 (you) signs in with Google and manages multiple WhatsApp bot accounts, each
 tied to a user (name + phone number).

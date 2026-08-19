@@ -99,10 +99,12 @@
     top: 50px;
     right: 0;
     width: 240px;
-    background: var(--panel);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(15, 23, 32, 0.12);
+    box-shadow: 0 12px 32px rgba(15, 23, 32, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
     padding: 16px;
     z-index: 60;
     opacity: 0;
@@ -169,7 +171,7 @@
     display: block;
   }
 
-  .dd-item:hover { background: var(--panel-strong); }
+  .dd-item:hover { background: rgba(15, 23, 32, 0.06); }
   .dd-item.danger { color: var(--danger); }
   .panel {
     border-radius: 20px;
@@ -637,7 +639,7 @@
       document.getElementById("dd-account-info")?.remove();
       const box = document.createElement("div");
       box.id = "dd-account-info";
-      box.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid rgba(15,23,32,0.1);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(15,23,32,0.18);z-index:100;width:min(320px,88vw);text-align:center;";
+      box.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(255,255,255,0.55);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid rgba(255,255,255,0.4);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(15,23,32,0.18), inset 0 1px 0 rgba(255,255,255,0.6);z-index:100;width:min(320px,88vw);text-align:center;";
       const name = document.getElementById("ddName").textContent;
       const email = document.getElementById("ddEmail").textContent;
       box.innerHTML = `
@@ -659,6 +661,14 @@
       t.textContent = msg;
       t.classList.add("show");
       setTimeout(() => t.classList.remove("show"), 2600);
+    }
+
+    let sessionExpiredHandled = false;
+    function handleSessionExpired() {
+      if (sessionExpiredHandled) return;
+      sessionExpiredHandled = true;
+      toast("Session expired. Redirecting to login...");
+      setTimeout(() => { window.location.href = "/index.html"; }, 1200);
     }
 
     function addRipple(btn, e) {
@@ -687,7 +697,10 @@
     async function refreshUptime() {
       try {
         const res = await fetch("/api/server-info", { credentials: "include" });
+        if (res.status === 401) { handleSessionExpired(); return; }
+        if (!res.ok) return;
         const data = await res.json();
+        if (typeof data.uptimeSeconds !== "number") return;
         document.getElementById("uptimeText").textContent = "Uptime: " + formatUptime(data.uptimeSeconds);
       } catch (err) {}
     }
@@ -704,6 +717,7 @@
           credentials: "include",
           body: JSON.stringify({ name, phone }),
         });
+        if (res.status === 401) { handleSessionExpired(); return; }
         const data = await res.json();
         if (data.ok) {
           document.getElementById("newName").value = "";
@@ -794,6 +808,7 @@
       const q = document.getElementById("searchInput").value.trim();
       try {
         const res = await fetch("/api/users" + (q ? `?q=${encodeURIComponent(q)}` : ""), { credentials: "include" });
+        if (res.status === 401) { handleSessionExpired(); return; }
         const data = await res.json();
         renderUsers(data.users || []);
       } catch (err) {}
