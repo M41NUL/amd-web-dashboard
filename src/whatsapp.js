@@ -60,7 +60,7 @@ async function handleMessage(userId, m) {
         { quoted: msg }
       );
     } else {
-      await session.sock.sendMessage(jid, { text: 'Please send a video link only.' }, { quoted: msg });
+      await session.sock.sendMessage(jid, { text: 'Oops! Please send a valid video link (TikTok, Instagram, or Facebook).' }, { quoted: msg });
     }
     await session.sock.sendPresenceUpdate('paused', jid).catch(() => {});
     return;
