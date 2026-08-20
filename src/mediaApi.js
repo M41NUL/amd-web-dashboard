@@ -9,9 +9,7 @@ export function detectPlatform(url) {
 }
 
 export async function fetchMediaInfo(url) {
-  const platform = detectPlatform(url);
-  const endpoint = platform ? `/api/${platform}` : '/api/download';
-  const res = await fetch(`${API_BASE}${endpoint}?url=${encodeURIComponent(url)}`, {
+  const res = await fetch(`${API_BASE}/api/download?url=${encodeURIComponent(url)}`, {
     headers: { 'x-api-key': API_KEY },
   });
   if (!res.ok) throw new Error(`API status ${res.status}`);

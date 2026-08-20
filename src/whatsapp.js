@@ -106,7 +106,16 @@ async function handleMessage(userId, m) {
 
     clearInterval(typingInterval);
     await session.sock.sendPresenceUpdate('paused', jid);
-    await session.sock.sendMessage(jid, { video: videoBuffer, caption: captionText, mimetype: 'video/mp4' }, { quoted: msg });
+    await session.sock.sendMessage(
+      jid,
+      {
+        video: videoBuffer,
+        caption: captionText,
+        mimetype: 'video/mp4',
+        fileName: data.filename || `${data.title || 'video'} - All Media Downloader.mp4`,
+      },
+      { quoted: msg }
+    );
 
     session.downloadCount++;
     addLog({ platform, status: 'Success', user: jid, ownerUserId: userId });
